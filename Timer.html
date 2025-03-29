@@ -1,0 +1,281 @@
+#<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timer with Digital and Analog Displays</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+    
+    .digital-display {
+      font-size: 48px;
+      font-weight: bold;
+      color: #333;
+      margin: 20px 0;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .clock-face {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background-color: #fff;
+      border: 10px solid #333;
+      position: relative;
+      margin: 20px auto;
+      box-sizing: content-box; /* Ensures border is outside of the element */
+    }
+    
+    .center-point {
+      width: 12px;
+      height: 12px;
+      background-color: #333;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+    }
+    
+    .hour-hand {
+      width: 8px;
+      height: 75px;
+      background-color: #333;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -100%) rotate(0deg);
+      transform-origin: bottom center;
+      z-index: 2;
+      border-radius: 4px;
+    }
+    
+    .minute-hand {
+      width: 6px;
+      height: 100px;
+      background-color: #666;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -100%) rotate(0deg);
+      transform-origin: bottom center;
+      z-index: 2;
+      border-radius: 3px;
+    }
+    
+    .second-hand {
+      width: 2px;
+      height: 120px;
+      background-color: #e74c3c;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -100%) rotate(0deg);
+      transform-origin: bottom center;
+      z-index: 3;
+    }
+
+    .hour-marks {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
+    
+    .hour-mark {
+      position: absolute;
+      width: 4px;
+      height: 15px;
+      background-color: #333;
+      top: 0;
+      left: 50%;
+      transform-origin: 50% 125px; /* Set the origin point to be at the center of the circle */
+    }
+    
+    .minute-mark {
+      position: absolute;
+      width: 2px;
+      height: 5px;
+      background-color: #999;
+      top: 0;
+      left: 50%;
+      transform-origin: 50% 125px; /* Set the origin point to be at the center of the circle */
+    }
+    
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s, transform 0.1s;
+    }
+    
+    button:active {
+      transform: scale(0.97);
+    }
+    
+    #start-btn {
+      background-color: #2ecc71;
+      color: white;
+    }
+    
+    #stop-btn {
+      background-color: #e74c3c;
+      color: white;
+    }
+    
+    #reset-btn {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Timer</h1>
+    <div class="digital-display" id="digital-display">00:00:00</div>
+    
+    <div class="clock-face">
+      <div class="hour-marks" id="hour-marks"></div>
+      <div class="hour-hand" id="hour-hand"></div>
+      <div class="minute-hand" id="minute-hand"></div>
+      <div class="second-hand" id="second-hand"></div>
+      <div class="center-point"></div>
+    </div>
+    
+    <div class="buttons">
+      <button id="start-btn">Start</button>
+      <button id="stop-btn">Stop</button>
+      <button id="reset-btn">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // References to DOM elements
+      const digitalDisplay = document.getElementById('digital-display');
+      const hourHand = document.getElementById('hour-hand');
+      const minuteHand = document.getElementById('minute-hand');
+      const secondHand = document.getElementById('second-hand');
+      const startBtn = document.getElementById('start-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const hourMarksContainer = document.getElementById('hour-marks');
+      
+      // Create clock face marks
+      for (let i = 0; i < 12; i++) {
+        const hourMark = document.createElement('div');
+        hourMark.className = 'hour-mark';
+        hourMark.style.transform = `rotate(${i * 30}deg) translateX(-2px)`;
+        hourMarksContainer.appendChild(hourMark);
+        
+        // Add minute marks between each hour
+        for (let j = 1; j < 5; j++) {
+          const minuteMark = document.createElement('div');
+          minuteMark.className = 'minute-mark';
+          minuteMark.style.transform = `rotate(${i * 30 + j * 6}deg) translateX(-1px)`;
+          hourMarksContainer.appendChild(minuteMark);
+        }
+      }
+      
+      // Timer variables
+      let timerInterval;
+      let startTime;
+      let elapsedTime = 0;
+      let running = false;
+      
+      // Initial state - set to 12:00:00 (noon)
+      updateDisplays(0, 0, 0);
+      
+      // Start button click handler
+      startBtn.addEventListener('click', function() {
+        if (!running) {
+          startTime = Date.now() - elapsedTime;
+          timerInterval = setInterval(updateTimer, 1000);
+          running = true;
+        }
+      });
+      
+      // Stop button click handler
+      stopBtn.addEventListener('click', function() {
+        if (running) {
+          clearInterval(timerInterval);
+          running = false;
+        }
+      });
+      
+      // Reset button click handler
+      resetBtn.addEventListener('click', function() {
+        clearInterval(timerInterval);
+        running = false;
+        elapsedTime = 0;
+        updateDisplays(0, 0, 0);
+      });
+      
+      // Update timer function
+      function updateTimer() {
+        elapsedTime = Date.now() - startTime;
+        
+        const totalSeconds = Math.floor(elapsedTime / 1000);
+        const hours = Math.floor(totalSeconds / 3600) % 12;
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        updateDisplays(hours, minutes, seconds);
+      }
+      
+      // Update both displays (digital and analog)
+      function updateDisplays(hours, minutes, seconds) {
+        // Update digital display
+        digitalDisplay.textContent = 
+          (hours < 10 ? '0' + hours : hours) + ':' + 
+          (minutes < 10 ? '0' + minutes : minutes) + ':' + 
+          (seconds < 10 ? '0' + seconds : seconds);
+        
+        // Update analog display
+        const hourDegrees = (hours * 30) + (minutes * 0.5); // Each hour = 30 degrees, each minute adds 0.5 degrees
+        const minuteDegrees = minutes * 6; // Each minute = 6 degrees
+        const secondDegrees = seconds * 6; // Each second = 6 degrees
+        
+        hourHand.style.transform = `translate(-50%, -100%) rotate(${hourDegrees}deg)`;
+        minuteHand.style.transform = `translate(-50%, -100%) rotate(${minuteDegrees}deg)`;
+        secondHand.style.transform = `translate(-50%, -100%) rotate(${secondDegrees}deg)`;
+      }
+    });
+  </script>
+</body>
+</html>
